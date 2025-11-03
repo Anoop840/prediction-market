@@ -4,7 +4,7 @@ import { useWallet } from '../contexts/WalletContext';
 import { useToast } from '../contexts/ToastContext';
 
 const CreateMarket = () => {
-    const { account } = useWallet();
+    const { account, connectWallet, isConnecting } = useWallet();
     const { showToast } = useToast();
 
     const [formData, setFormData] = useState({
@@ -135,22 +135,237 @@ const CreateMarket = () => {
                 </div>
 
                 {!account ? (
-                    /* Connect Wallet Prompt */
                     <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center">
                         <div className="text-gray-400 mb-6">
                             <DollarSign className="w-16 h-16 mx-auto" />
                         </div>
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">Connect Your Wallet</h2>
                         <p className="text-gray-600 mb-6">You need to connect your wallet to create prediction markets</p>
-                        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                            Connect Wallet
+                        <button
+                            onClick={connectWallet}
+                            disabled={isConnecting}
+                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                         </button>
                     </div>
                 ) : (
-                    /* Create Market Form */
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Basic Information */}
-                        {/* ... (rest of your form fields remain unchanged) ... */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-4">
+                            <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Company Name</label>
+                                    <input
+                                        name="companyName"
+                                        value={formData.companyName}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                        placeholder="Acme Corp"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Ticker Symbol</label>
+                                    <input
+                                        name="tickerSymbol"
+                                        value={formData.tickerSymbol}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                        placeholder="ACME"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Sector / Industry</label>
+                                    <input
+                                        name="sectorIndustry"
+                                        value={formData.sectorIndustry}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                        placeholder="Financial Services"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Country / Region</label>
+                                    <input
+                                        name="countryRegion"
+                                        value={formData.countryRegion}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                        placeholder="United States"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Market Details */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-4">
+                            <h3 className="text-lg font-medium text-gray-900">Market Details</h3>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Question</label>
+                                <input
+                                    name="question"
+                                    value={formData.question}
+                                    onChange={handleInputChange}
+                                    className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    placeholder="Will ACME Corp default on its 2026 bonds by 2026-12-31?"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Description (optional)</label>
+                                <textarea
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleInputChange}
+                                    rows={4}
+                                    className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    placeholder="Provide context, data sources, and resolution process"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Deadline</label>
+                                    <input
+                                        type="datetime-local"
+                                        name="deadline"
+                                        value={formData.deadline}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Category</label>
+                                    <select
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    >
+                                        {categories.map(cat => (
+                                            <option key={cat.value} value={cat.value}>{cat.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Resolution Criteria</label>
+                                    <div className="mt-2 space-y-1">
+                                        <label className="inline-flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.resolutionCriteria.includes('default')}
+                                                onChange={() => handleCheckboxChange('default')}
+                                                className="mr-2"
+                                            />
+                                            Default on or before maturity
+                                        </label>
+                                        <label className="inline-flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.resolutionCriteria.includes('price')}
+                                                onChange={() => handleCheckboxChange('price')}
+                                                className="mr-2"
+                                            />
+                                            Price below threshold
+                                        </label>
+                                        <label className="inline-flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.resolutionCriteria.includes('downgrade')}
+                                                onChange={() => handleCheckboxChange('downgrade')}
+                                                className="mr-2"
+                                            />
+                                            Credit rating downgrade
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Bond Details (optional) */}
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-4">
+                            <h3 className="text-lg font-medium text-gray-900">Bond Details (optional)</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Bond ID</label>
+                                    <input
+                                        name="bondId"
+                                        value={formData.bondId}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Bond Type</label>
+                                    <input
+                                        name="bondType"
+                                        value={formData.bondType}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Issue Date</label>
+                                    <input
+                                        type="date"
+                                        name="issueDate"
+                                        value={formData.issueDate}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Maturity Date</label>
+                                    <input
+                                        type="date"
+                                        name="maturityDate"
+                                        value={formData.maturityDate}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Coupon Rate (%)</label>
+                                    <input
+                                        name="couponRate"
+                                        value={formData.couponRate}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Face Value</label>
+                                    <input
+                                        name="faceValue"
+                                        value={formData.faceValue}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    />
+                                </div>
+
+                                <div className="sm:col-span-3">
+                                    <label className="block text-sm font-medium text-gray-700">Credit Rating</label>
+                                    <input
+                                        name="creditRating"
+                                        value={formData.creditRating}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full rounded-md border-gray-200 shadow-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
                         {/* Submit Button */}
                         <div className="flex justify-end">

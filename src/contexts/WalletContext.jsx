@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import { ethers } from 'ethers';
+import { useCallback } from 'react';
 const WalletContext = createContext();
 
 export const useWallet = () => {
@@ -15,18 +16,31 @@ export const WalletProvider = ({ children }) => {
     const [balance, setBalance] = useState('0.00');
     const [isConnecting, setIsConnecting] = useState(false);
 
+    // Detect any injected Ethereum provider (MetaMask or other wallets)
+    const isMetaMaskAvailable = () => typeof window !== 'undefined' && Boolean(window.ethereum);
+
+    const fetchBalance = useCallback(async (address) => {
+        if (isMetaMaskAvailable()) {
+            try {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const balanceWei = await provider.getBalance(address);
+                const balanceEth = ethers.utils.formatEther(balanceWei);
+                setBalance(balanceEth);
+            } catch (error) {
+                console.error('Failed to fetch balance:', error);
+                setBalance('0.00');
+            }
+        }
+    }, []);
+
     const connectWallet = async () => {
-        if (typeof window.ethereum !== 'undefined') {
+        if (isMetaMaskAvailable()) {
             try {
                 setIsConnecting(true);
-                const accounts = await window.ethereum.request({
-                    method: 'eth_requestAccounts',
-                });
-
-                if (accounts.length > 0) {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (accounts && accounts.length > 0) {
                     setAccount(accounts[0]);
-                    // Mock balance for demo
-                    setBalance('2.45');
+                    await fetchBalance(accounts[0]);
                 }
             } catch (error) {
                 console.error('Failed to connect wallet:', error);
@@ -34,7 +48,9 @@ export const WalletProvider = ({ children }) => {
                 setIsConnecting(false);
             }
         } else {
-            alert('Please install MetaMask to use this application');
+            // more friendly message and fallback link
+            const install = window.confirm('MetaMask not detected in your browser. Would you like to open the MetaMask download page?');
+            if (install) window.open('https://metamask.io/download.html', '_blank');
         }
     };
 
@@ -46,14 +62,12 @@ export const WalletProvider = ({ children }) => {
     useEffect(() => {
         // Check if wallet is already connected
         const checkConnection = async () => {
-            if (typeof window.ethereum !== 'undefined') {
+            if (isMetaMaskAvailable()) {
                 try {
-                    const accounts = await window.ethereum.request({
-                        method: 'eth_accounts',
-                    });
-                    if (accounts.length > 0) {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (accounts && accounts.length > 0) {
                         setAccount(accounts[0]);
-                        setBalance('2.45');
+                        await fetchBalance(accounts[0]);
                     }
                 } catch (error) {
                     console.error('Failed to check wallet connection:', error);
@@ -62,7 +76,7 @@ export const WalletProvider = ({ children }) => {
         };
 
         checkConnection();
-    }, []);
+    }, [fetchBalance]);
 
     return (
         <WalletContext.Provider
