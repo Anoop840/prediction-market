@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { Calendar, Info, DollarSign, Clock, AlertCircle } from 'lucide-react';
 import { useWallet } from '../contexts/WalletContext';
 import { useToast } from '../contexts/ToastContext';
+import { useMarkets } from '../contexts/MarketContext';
+import { useNavigate } from 'react-router-dom';
 
 const CreateMarket = () => {
     const { account, connectWallet, isConnecting } = useWallet();
     const { showToast } = useToast();
+    const { addMarket } = useMarkets();
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         companyName: '',
@@ -86,8 +90,14 @@ const CreateMarket = () => {
 
         // Simulate market creation
         setTimeout(() => {
+            // 1. ADD MARKET to the global state
+            addMarket(formData);
+
             setIsCreating(false);
-            showToast('success', 'Prediction market created successfully!');
+            showToast('success', 'Prediction market created successfully! Redirecting to Markets...');
+
+            // 2. NAVIGATE: This forces the Markets page to remount and grab the latest data.
+            navigate('/markets');
 
             // Reset form
             setFormData({

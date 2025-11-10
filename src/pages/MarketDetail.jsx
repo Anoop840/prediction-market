@@ -6,7 +6,8 @@ import { useToast } from '../contexts/ToastContext';
 
 const MarketDetail = () => {
     const { id } = useParams();
-    const { account } = useWallet();
+    // Get connectWallet and isConnecting from context to use in the sidebar button
+    const { account, connectWallet, isConnecting } = useWallet();
     const { showToast } = useToast();
     const [selectedPosition, setSelectedPosition] = useState('yes');
     const [betAmount, setBetAmount] = useState('');
@@ -61,12 +62,22 @@ const MarketDetail = () => {
 
         setIsPlacingBet(true);
 
-        // Simulate transaction
+        // --- START MOCK TRANSACTION LOGIC ---
+        // Once you have your Smart Contract deployed and Ethers.js setup is confirmed working,
+        // you will replace this setTimeout block with your actual contract call logic.
+
+        // This simulates a transaction confirmation delay
         setTimeout(() => {
             setIsPlacingBet(false);
-            showToast('success', `Successfully placed ${betAmount} ETH bet on ${selectedPosition.toUpperCase()}`);
+            // This toast confirms the simulated success
+            showToast('success', `Successfully placed ${betAmount} ETH bet on ${selectedPosition.toUpperCase()} (Simulated)`);
             setBetAmount('');
         }, 2000);
+
+        // --- END MOCK TRANSACTION LOGIC ---
+
+        // The original logic had two setTimeout calls, which is incorrect. 
+        // We removed the duplicate and kept the clean mock above.
     };
 
     const calculatePotentialWinnings = () => {
@@ -186,8 +197,8 @@ const MarketDetail = () => {
                                     <div key={index} className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
                                         <div className="flex items-center space-x-3">
                                             <div className={`px-2 py-1 rounded text-xs font-medium ${trade.position === 'YES'
-                                                    ? 'bg-red-100 text-red-700'
-                                                    : 'bg-emerald-100 text-emerald-700'
+                                                ? 'bg-red-100 text-red-700'
+                                                : 'bg-emerald-100 text-emerald-700'
                                                 }`}>
                                                 {trade.position}
                                             </div>
@@ -238,8 +249,12 @@ const MarketDetail = () => {
                                         <DollarSign className="w-12 h-12 mx-auto" />
                                     </div>
                                     <p className="text-gray-600 mb-4">Connect your wallet to start trading</p>
-                                    <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                                        Connect Wallet
+                                    <button
+                                        onClick={connectWallet} // FIX: Added handler 
+                                        disabled={isConnecting} // FIX: Added disabled state
+                                        className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                                     </button>
                                 </div>
                             ) : (
@@ -251,8 +266,8 @@ const MarketDetail = () => {
                                             <button
                                                 onClick={() => setSelectedPosition('yes')}
                                                 className={`p-3 rounded-lg border-2 transition-colors ${selectedPosition === 'yes'
-                                                        ? 'border-red-500 bg-red-50 text-red-700'
-                                                        : 'border-gray-200 hover:border-red-300'
+                                                    ? 'border-red-500 bg-red-50 text-red-700'
+                                                    : 'border-gray-200 hover:border-red-300'
                                                     }`}
                                             >
                                                 <div className="font-medium">YES</div>
@@ -261,8 +276,8 @@ const MarketDetail = () => {
                                             <button
                                                 onClick={() => setSelectedPosition('no')}
                                                 className={`p-3 rounded-lg border-2 transition-colors ${selectedPosition === 'no'
-                                                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                        : 'border-gray-200 hover:border-emerald-300'
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                    : 'border-gray-200 hover:border-emerald-300'
                                                     }`}
                                             >
                                                 <div className="font-medium">NO</div>
